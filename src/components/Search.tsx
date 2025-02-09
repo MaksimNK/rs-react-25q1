@@ -1,51 +1,40 @@
-import { Component, ReactNode } from 'react';
+import React, { useState } from 'react';
 
 interface ISearchProps {
   searchTerm: string;
   handleSearch: (query: string) => void;
 }
 
-interface ISearchState {
-  inputValue: string;
-}
+const Search: React.FC<ISearchProps> = ({ searchTerm, handleSearch }) => {
+  const [inputValue, setInputValue] = useState(searchTerm);
 
-class Search extends Component<ISearchProps, ISearchState> {
-  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ inputValue: event.target.value });
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
   };
 
-  constructor(props: ISearchProps) {
-    super(props);
-    this.state = {
-      inputValue: props.searchTerm || '',
-    };
-  }
-
-  handleSearch = () => {
-    const trimValue = this.state.inputValue.trim();
-    this.props.handleSearch(trimValue);
+  const handleSearchClick = () => {
+    const trimmedValue = inputValue.trim();
+    handleSearch(trimmedValue);
   };
 
-  handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
-      this.handleSearch();
+      handleSearchClick();
     }
   };
 
-  render(): ReactNode {
-    return (
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Let's find"
-          value={this.state.inputValue}
-          onChange={this.handleChange}
-          onKeyDown={this.handleKeyDown}
-        />
-        <button onClick={this.handleSearch}>Search</button>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="search-container">
+      <input
+        type="text"
+        placeholder="Let's find"
+        value={inputValue}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+      />
+      <button onClick={handleSearchClick}>Search</button>
+    </div>
+  );
+};
 
 export default Search;
