@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ThemeSelector matches snapshot 1`] = `
+<DocumentFragment>
+  <div
+    class="theme-selector"
+  >
+    <label
+      for="theme-select"
+    >
+      Select Theme: 
+    </label>
+    <select
+      id="theme-select"
+    >
+      <option
+        value="light"
+      >
+        Light
+      </option>
+      <option
+        value="dark"
+      >
+        Dark
+      </option>
+    </select>
+  </div>
+</DocumentFragment>
+`;
