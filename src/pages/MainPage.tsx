@@ -5,6 +5,7 @@ import ListItem from '../components/ListItem';
 import { fetchData } from '../utils/api';
 import { Outlet, useSearchParams, useNavigate } from 'react-router-dom';
 import { Pagination } from '../components/Pagination';
+import Flyout from '../components/Flyout';
 export const MainPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -81,6 +82,8 @@ export const MainPage: FC = () => {
       <div className="right-section">
         <Outlet />
       </div>
+
+      <Flyout />
     </div>
   );
 };

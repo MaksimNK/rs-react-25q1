@@ -20,7 +20,6 @@ export const fetchData = async (
 ): Promise<IApiResponse> => {
   const url = ENDPOINTS[category];
   if (!url) {
-    console.error('Error, category not found');
     return { count: 0, next: null, previous: null, results: [] };
   }
 
@@ -43,7 +42,7 @@ export const fetchData = async (
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Fetch Error:', error);
+    console.error(error);
     return { count: 0, next: null, previous: null, results: [] };
   }
 };
@@ -51,7 +50,6 @@ export const fetchData = async (
 export const fetchSinglePerson = async (id: string): Promise<IItem | null> => {
   const baseUrl = ENDPOINTS['people'];
   if (!baseUrl) {
-    console.error('Error, category not found');
     return null;
   }
   try {
@@ -66,7 +64,7 @@ export const fetchSinglePerson = async (id: string): Promise<IItem | null> => {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Fetch Error:', error);
+    console.error(error);
     return null;
   }
 };
