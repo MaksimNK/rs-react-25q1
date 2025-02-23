@@ -1,27 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ThemeSelector from '../../components/ThemeSelector';
-import { useTheme } from '../../context/ThemeProvider';
+import { useTheme } from '../../context/theme-context';
 
-jest.mock('../../context/ThemeProvider', () => ({
-  useTheme: jest.fn(() => ({
-    theme: 'light',
-    setTheme: jest.fn(),
-  })),
+jest.mock('../../context/theme-context', () => ({
+  useTheme: jest.fn(),
 }));
 
 const mockUseTheme = useTheme as jest.MockedFunction<typeof useTheme>;
 
 describe('ThemeSelector', () => {
-  beforeEach(() => {
-    mockUseTheme.mockClear();
-  });
-
   it('renders with current theme', () => {
-    mockUseTheme.mockReturnValue({
-      theme: 'dark',
-      setTheme: jest.fn(),
-    });
+    mockUseTheme.mockReturnValue({ theme: 'dark', setTheme: jest.fn() });
 
     render(<ThemeSelector />);
 
@@ -32,10 +22,7 @@ describe('ThemeSelector', () => {
 
   it('updates theme on selection change', async () => {
     const mockSetTheme = jest.fn();
-    mockUseTheme.mockReturnValue({
-      theme: 'light',
-      setTheme: mockSetTheme,
-    });
+    mockUseTheme.mockReturnValue({ theme: 'light', setTheme: mockSetTheme });
 
     render(<ThemeSelector />);
 
@@ -46,6 +33,8 @@ describe('ThemeSelector', () => {
   });
 
   it('matches snapshot', () => {
+    mockUseTheme.mockReturnValue({ theme: 'light', setTheme: jest.fn() });
+
     const { asFragment } = render(<ThemeSelector />);
     expect(asFragment()).toMatchSnapshot();
   });

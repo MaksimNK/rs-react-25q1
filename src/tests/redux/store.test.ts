@@ -1,73 +1,40 @@
-import { configureStore } from '@reduxjs/toolkit';
-import selectedItemReducer, {
-  selectItem,
-  unSelectItem,
-  unSelectAll,
-} from '../../redux/selectItemSlice';
-import { RootState, AppDispatch } from '../../redux/store';
-import { IItem } from '../../utils/api';
+// store.test.ts
+import store from '../../redux/store';
+import { selectItem, unSelectItem, unSelectAll } from '../../redux/selectItemSlice';
+import { IItem } from '../../types/item';
 
-describe('Redux Store Configuration', () => {
-  const testItem: IItem = {
-    name: 'Test Item',
-    url: 'http://test.com/item/1',
-  };
-
-  let store: ReturnType<typeof configureStore<RootState>>;
-
+describe('Redux Store Integration', () => {
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        selectedItem: selectedItemReducer,
-      },
-    });
+    store.dispatch(unSelectAll());
   });
 
-  it('should have correct initial state', () => {
+  it('should have an initial state for selectedItem', () => {
     const state = store.getState();
     expect(state.selectedItem.items).toEqual([]);
   });
 
-  it('should handle item selection', () => {
-    store.dispatch(selectItem(testItem));
+  it('should update selectedItem state on selectItem action', () => {
+    const item: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
+    store.dispatch(selectItem(item));
     const state = store.getState();
-    expect(state.selectedItem.items).toContainEqual(testItem);
+    expect(state.selectedItem.items).toContainEqual(item);
   });
 
-  it('should handle item unselection', () => {
-    // First select the item
-    store.dispatch(selectItem(testItem));
-
-    // Then unselect it
-    store.dispatch(unSelectItem(testItem));
-
+  it('should update selectedItem state on unSelectItem action', () => {
+    const item: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
+    store.dispatch(selectItem(item));
+    store.dispatch(unSelectItem(item));
     const state = store.getState();
-    expect(state.selectedItem.items).not.toContainEqual(testItem);
+    expect(state.selectedItem.items).not.toContainEqual(item);
   });
 
-  it('should handle unselect all', () => {
-    // Add multiple items
-    store.dispatch(selectItem(testItem));
-    store.dispatch(
-      selectItem({
-        name: 'Another Item',
-        url: 'http://test.com/item/2',
-      })
-    );
-
-    // Unselect all
+  it('should update selectedItem state on unSelectAll action', () => {
+    const item1: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
+    const item2: IItem = { name: 'Darth Vader', url: 'https://swapi.dev/api/people/4/' };
+    store.dispatch(selectItem(item1));
+    store.dispatch(selectItem(item2));
     store.dispatch(unSelectAll());
-
     const state = store.getState();
-    expect(state.selectedItem.items).toHaveLength(0);
-  });
-
-  it('should have correct type definitions', () => {
-    // Test type exports
-    const dispatch: AppDispatch = store.dispatch;
-    const state: RootState = store.getState();
-
-    expect(typeof dispatch).toBe('function');
-    expect(state).toHaveProperty('selectedItem');
+    expect(state.selectedItem.items).toEqual([]);
   });
 });

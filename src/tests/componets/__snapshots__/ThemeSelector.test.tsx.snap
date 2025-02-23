@@ -2,14 +2,10 @@
 
 exports[`ThemeSelector matches snapshot 1`] = `
 <DocumentFragment>
-  <div
-    class="theme-selector"
+  <label
+    for="theme-select"
   >
-    <label
-      for="theme-select"
-    >
-      Select Theme: 
-    </label>
+    Select Theme:
     <select
       id="theme-select"
     >
@@ -24,6 +20,6 @@ exports[`ThemeSelector matches snapshot 1`] = `
         Dark
       </option>
     </select>
-  </div>
+  </label>
 </DocumentFragment>
 `;
