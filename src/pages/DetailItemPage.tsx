@@ -1,28 +1,22 @@
-import { FC, useEffect, useState } from 'react';
-import { IItem, fetchSinglePerson } from '../utils/api';
+import { FC } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { useFetchSinglePersonQuery } from '../redux/apiSlice';
 export const DetailItemPage: FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [item, setItem] = useState<IItem | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadItem = async () => {
-      try {
-        if (!id) return;
-        const data = await fetchSinglePerson(id);
-        setItem(data);
-      } catch {
-        setError('Error fetching data.');
-      }
-    };
-    loadItem();
-  }, [id]);
+  const {
+    data: item,
+    error,
+    isLoading,
+  } = useFetchSinglePersonQuery(
+    { id: id as string, category: 'people' },
+    { skip: !id }
+  );
 
-  if (error) return <div className="error">{error}</div>;
-  if (!item) return <div>Loading...</div>;
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div className="error">Error fetching data.</div>;
+  if (!item) return <div>No data found.</div>;
 
   return (
     <div className="details-panel">

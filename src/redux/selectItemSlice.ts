@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { IItem } from '../utils/api';
+import { IItem } from '../types/item';
 
 export interface SelectedItemState {
   items: IItem[];
