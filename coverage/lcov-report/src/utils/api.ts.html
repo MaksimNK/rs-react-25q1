@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>32/32</span>
+                <span class='fraction'>34/34</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>30/30</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
@@ -131,7 +131,9 @@
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a>
 <a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -176,6 +178,7 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -197,76 +200,79 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">  import ENDPOINTS from './endpoint';
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import ENDPOINTS from './endpoint';
 &nbsp;
-  export interface IItem {
-    name: string;
-    model?: string;
-    url: string;
+export interface IItem {
+  name: string;
+  model?: string;
+  url: string;
+}
+&nbsp;
+export interface IApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: IItem[];
+}
+&nbsp;
+export const fetchData = async (
+  category: string,
+  searchTerm: string,
+  page: number = <span class="branch-0 cbranch-no" title="branch not covered" >1</span>
+): Promise&lt;IApiResponse&gt; =&gt; {
+  const url = ENDPOINTS[category];
+  if (!url) {
+    return { count: 0, next: null, previous: null, results: [] };
   }
 &nbsp;
-  export interface IApiResponse {
-    count: number;
-    next: string | null;
-    previous: string | null;
-    results: IItem[];
+  try {
+    let fullUrl = url;
+    if (searchTerm) {
+      fullUrl += `?search=${encodeURIComponent(searchTerm)}&amp;page=${page}`;
+    } else {
+      fullUrl += `?page=${page}`;
+    }
+&nbsp;
+    const response = await fetch(fullUrl);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`
+      );
+    }
+&nbsp;
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    return { count: 0, next: null, previous: null, results: [] };
   }
+};
 &nbsp;
-  export const fetchData = async (
-    category: string,
-    searchTerm: string,
-    page: number = <span class="branch-0 cbranch-no" title="branch not covered" >1</span>
-  ): Promise&lt;IApiResponse&gt; =&gt; {
-    const url = ENDPOINTS[category];
-    if (!url) {
-      return { count: 0, next: null, previous: null, results: [] };
+export const fetchSinglePerson = async (id: string): Promise&lt;IItem | null&gt; =&gt; {
+  const baseUrl = ENDPOINTS['people'];
+  if (!baseUrl) {
+    return null;
+  }
+  try {
+    const fullUrl = `${baseUrl}${id}/`;
+    const response = await fetch(fullUrl);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`
+      );
     }
-&nbsp;
-    try {
-      let fullUrl = url;
-      if (searchTerm) {
-        fullUrl += `?search=${encodeURIComponent(searchTerm)}&amp;page=${page}`;
-      } else {
-        fullUrl += `?page=${page}`;
-      }
-&nbsp;
-      const response = await fetch(fullUrl);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
-        );
-      }
-&nbsp;
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return { count: 0, next: null, previous: null, results: [] };
-    }
-  };
-&nbsp;
-  export const fetchSinglePerson = async (id: string): Promise&lt;IItem | null&gt; =&gt; {
-    const baseUrl = ENDPOINTS['people'];
-    if (!baseUrl) {
-      return null;
-    }
-    try {
-      const fullUrl = `${baseUrl}${id}/`;
-      const response = await fetch(fullUrl);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `HTTP error! status: ${response.status}, message: ${errorText}`
-        );
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      return null;
-    }
-  };
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -274,7 +280,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-02-13T21:44:38.406Z
+                at 2025-02-16T16:47:56.597Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
