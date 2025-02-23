@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import { useSelector } from 'react-redux';
-import { IItem } from '../utils/api';
 import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch } from 'react-redux';
 import { selectItem, unSelectItem } from '../redux/selectItemSlice';
+import { IItem } from '../types/item';
 
 interface IItemProps {
   data: IItem;

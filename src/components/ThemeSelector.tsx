@@ -1,22 +1,22 @@
 import React from 'react';
-import { useTheme, Theme } from '../context/ThemeProvider';
+import { useTheme } from '../context/theme-context';
+import { Theme } from '../context/theme-context';
 
 const ThemeSelector: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedTheme = e.target.value as Theme;
-    setTheme(selectedTheme);
+  const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setTheme(event.target.value as Theme);
   };
 
   return (
-    <div className="theme-selector">
-      <label htmlFor="theme-select">Select Theme: </label>
-      <select id="theme-select" value={theme} onChange={handleChange}>
+    <label htmlFor="theme-select">
+      Select Theme:
+      <select id="theme-select" value={theme} onChange={handleThemeChange}>
         <option value="light">Light</option>
         <option value="dark">Dark</option>
       </select>
-    </div>
+    </label>
   );
 };
 
