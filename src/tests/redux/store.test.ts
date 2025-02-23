@@ -1,6 +1,10 @@
 // store.test.ts
 import store from '../../redux/store';
-import { selectItem, unSelectItem, unSelectAll } from '../../redux/selectItemSlice';
+import {
+  selectItem,
+  unSelectItem,
+  unSelectAll,
+} from '../../redux/selectItemSlice';
 import { IItem } from '../../types/item';
 
 describe('Redux Store Integration', () => {
@@ -14,14 +18,20 @@ describe('Redux Store Integration', () => {
   });
 
   it('should update selectedItem state on selectItem action', () => {
-    const item: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
+    const item: IItem = {
+      name: 'Luke Skywalker',
+      url: 'https://swapi.dev/api/people/1/',
+    };
     store.dispatch(selectItem(item));
     const state = store.getState();
     expect(state.selectedItem.items).toContainEqual(item);
   });
 
   it('should update selectedItem state on unSelectItem action', () => {
-    const item: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
+    const item: IItem = {
+      name: 'Luke Skywalker',
+      url: 'https://swapi.dev/api/people/1/',
+    };
     store.dispatch(selectItem(item));
     store.dispatch(unSelectItem(item));
     const state = store.getState();
@@ -29,8 +39,14 @@ describe('Redux Store Integration', () => {
   });
 
   it('should update selectedItem state on unSelectAll action', () => {
-    const item1: IItem = { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' };
-    const item2: IItem = { name: 'Darth Vader', url: 'https://swapi.dev/api/people/4/' };
+    const item1: IItem = {
+      name: 'Luke Skywalker',
+      url: 'https://swapi.dev/api/people/1/',
+    };
+    const item2: IItem = {
+      name: 'Darth Vader',
+      url: 'https://swapi.dev/api/people/4/',
+    };
     store.dispatch(selectItem(item1));
     store.dispatch(selectItem(item2));
     store.dispatch(unSelectAll());

@@ -25,7 +25,6 @@ describe('ListItem component', () => {
       },
     });
 
-    
     render(
       <Provider store={store}>
         <ListItem items={items} />

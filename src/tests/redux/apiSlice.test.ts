@@ -1,4 +1,3 @@
-// apiSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import { api } from '../../redux/apiSlice';
 import selectedItemReducer from '../../redux/selectItemSlice';
@@ -28,7 +27,9 @@ describe('apiSlice endpoints', () => {
       count: 1,
       next: null,
       previous: null,
-      results: [{ name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' }],
+      results: [
+        { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' },
+      ],
     };
 
     (global.fetch as jest.Mock).mockResolvedValueOnce(
@@ -99,6 +100,9 @@ describe('apiSlice endpoints', () => {
     );
 
     expect(result.error).toBeDefined();
-    expect((result.error as any).status).toBe(500);
+    // Instead of casting as any, we narrow down the type.
+    type ErrorType = { status: number; data: unknown };
+    const errorObj = result.error as ErrorType;
+    expect(errorObj.status).toBe(500);
   });
 });

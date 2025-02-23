@@ -1,20 +1,12 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-} from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import {
-  MemoryRouter,
-  Route,
-  Routes,
-} from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MainPage from '../../pages/MainPage';
 import selectedItemReducer from '../../redux/selectItemSlice';
 import { api } from '../../redux/apiSlice';
+import * as reactRouterDom from 'react-router-dom'; // moved to top level
 
 function createTestStore() {
   return configureStore({
@@ -27,10 +19,15 @@ function createTestStore() {
   });
 }
 
-
 jest.mock('../../components/Search', () => ({
   __esModule: true,
-  default: ({ searchTerm, handleSearch }: any) => (
+  default: ({
+    searchTerm,
+    handleSearch,
+  }: {
+    searchTerm: string;
+    handleSearch: (value: string) => void;
+  }) => (
     <input
       data-testid="search-input"
       value={searchTerm}
@@ -43,7 +40,14 @@ jest.mock('../../components/Search', () => ({
 
 jest.mock('../../components/Pagination', () => ({
   __esModule: true,
-  Pagination: ({ currentPage, totalPages: _totalPages, onPageChange }: any) => (
+  Pagination: ({
+    currentPage,
+    onPageChange,
+  }: {
+    currentPage: number;
+    totalPages?: number;
+    onPageChange: (newPage: number) => void;
+  }) => (
     <button
       data-testid="pagination-button"
       onClick={() => onPageChange(currentPage + 1)}
@@ -84,17 +88,22 @@ describe('MainPage Component - Extra Coverage', () => {
     );
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('details/42', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('details/42', {
+        replace: true,
+      });
     });
   });
 
   it('updates search term when Search input changes', async () => {
     const fakeSuccessResponse = {
-      results: [{ name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' }],
+      results: [
+        { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' },
+      ],
       count: 1,
       next: null,
       previous: null,
     };
+
     (global.fetch as jest.Mock) = jest.fn(() =>
       Promise.resolve(
         new Response(JSON.stringify(fakeSuccessResponse), {
@@ -122,8 +131,10 @@ describe('MainPage Component - Extra Coverage', () => {
 
   it('updates page search param when Pagination button is clicked', async () => {
     const fakeSuccessResponse = {
-      results: [{ name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' }],
-      count: 20, // 20 items => 2 pages if 10 per page.
+      results: [
+        { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' },
+      ],
+      count: 20,
       next: null,
       previous: null,
     };
@@ -137,12 +148,10 @@ describe('MainPage Component - Extra Coverage', () => {
       )
     ) as jest.Mock;
 
-    
     const setSearchParamsMock = jest.fn();
-    jest.spyOn(require('react-router-dom'), 'useSearchParams').mockReturnValue([
-      new URLSearchParams('?page=1'),
-      setSearchParamsMock,
-    ]);
+    jest
+      .spyOn(reactRouterDom, 'useSearchParams')
+      .mockReturnValue([new URLSearchParams('?page=1'), setSearchParamsMock]);
 
     const store = createTestStore();
     render(
@@ -163,7 +172,7 @@ describe('MainPage Component - Extra Coverage', () => {
     fireEvent.click(paginationButton);
 
     expect(setSearchParamsMock).toHaveBeenCalled();
-    const newParams = setSearchParamsMock.mock.calls[0][0];
+    const newParams = setSearchParamsMock.mock.calls[0][0] as URLSearchParams;
     expect(newParams.get('page')).toBe('2');
   });
 });
