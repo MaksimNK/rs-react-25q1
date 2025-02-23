@@ -1,4 +1,4 @@
-const API_BASE = 'https://swapi.dev/api/';
+export const API_BASE = 'https://swapi.dev/api/';
 
 const ENDPOINTS: Record<string, string> = {
   people: `${API_BASE}people/`,

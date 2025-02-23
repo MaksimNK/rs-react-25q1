@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import Item from './Item';
-import { IItem } from '../utils/api';
 import { useSearchParams } from 'react-router-dom';
+import { IItem } from '../types/item';
 
 interface IListItemProps {
   items: IItem[];
