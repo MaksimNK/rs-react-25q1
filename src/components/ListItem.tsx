@@ -1,6 +1,6 @@
 import { FC } from 'react';
+import { useRouter } from 'next/router';
 import Item from './Item';
-import { useSearchParams } from 'react-router-dom';
 import { IItem } from '../types/item';
 
 interface IListItemProps {
@@ -8,12 +8,14 @@ interface IListItemProps {
 }
 
 export const ListItem: FC<IListItemProps> = ({ items }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const router = useRouter();
 
   const handleItemClick = (event: React.MouseEvent, id: string) => {
     event.stopPropagation();
-    searchParams.set('details', id);
-    setSearchParams(searchParams);
+    router.push({
+      pathname: '/',
+      query: { ...router.query, details: id },
+    });
   };
 
   return (

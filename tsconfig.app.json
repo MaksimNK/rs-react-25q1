@@ -12,16 +12,15 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noEmit": false
   },
   "include": [
     "src",
@@ -30,6 +29,13 @@
     "setupTests.ts",
     "src/redux/store.ts",
     "src/redux/selectItemSlice.ts"
-
-  ]
+  ],
+  "paths": {
+    "@components/": [
+      "components/"
+    ],
+    "@pages/": [
+      "pages/"
+    ]
+  }
 }

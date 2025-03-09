@@ -1,178 +1,184 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import MainPage from '../../pages/index';
+import { useRouter } from 'next/router';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import MainPage from '../../pages/MainPage';
-import selectedItemReducer from '../../redux/selectItemSlice';
-import { api } from '../../redux/apiSlice';
-import * as reactRouterDom from 'react-router-dom'; // moved to top level
+import store from '../../redux/store';
+import * as apiSlice from '../../redux/apiSlice';
 
-function createTestStore() {
-  return configureStore({
-    reducer: {
-      [api.reducerPath]: api.reducer,
-      selectedItem: selectedItemReducer,
-    },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(api.middleware),
-  });
+interface RouterQuery {
+  search?: string;
+  page?: string;
+  details?: string;
 }
 
-jest.mock('../../components/Search', () => ({
-  __esModule: true,
-  default: ({
-    searchTerm,
-    handleSearch,
-  }: {
-    searchTerm: string;
-    handleSearch: (value: string) => void;
-  }) => (
-    <input
-      data-testid="search-input"
-      value={searchTerm}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-        handleSearch(e.target.value)
-      }
-    />
-  ),
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
 }));
 
-jest.mock('../../components/Pagination', () => ({
-  __esModule: true,
-  Pagination: ({
-    currentPage,
-    onPageChange,
-  }: {
-    currentPage: number;
-    totalPages?: number;
-    onPageChange: (newPage: number) => void;
-  }) => (
-    <button
-      data-testid="pagination-button"
-      onClick={() => onPageChange(currentPage + 1)}
-    >
-      Next Page
-    </button>
-  ),
-}));
-
-jest.mock('../../components/Flyout', () => ({
-  __esModule: true,
-  default: () => <div data-testid="flyout">Flyout</div>,
-}));
-
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
+jest.mock('../../redux/apiSlice', () => {
+  const actualApiSlice = jest.requireActual('../../redux/apiSlice');
   return {
-    __esModule: true,
-    ...actual,
-    useNavigate: () => mockNavigate,
+    ...actualApiSlice,
+    useFetchDataQuery: jest.fn(),
+    useFetchSinglePersonQuery: jest.fn(),
   };
 });
 
-describe('MainPage Component - Extra Coverage', () => {
+const mockPush = jest.fn();
+
+const mockUseRouter = (query: RouterQuery) => {
+  (useRouter as jest.Mock).mockReturnValue({
+    query,
+    push: mockPush,
+  });
+};
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(<Provider store={store}>{ui}</Provider>);
+};
+
+describe('MainPage', () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
   });
 
-  it('navigates to details page if "details" search param exists', async () => {
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <MemoryRouter initialEntries={['/?details=42']}>
-          <MainPage />
-        </MemoryRouter>
-      </Provider>
-    );
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('details/42', {
-        replace: true,
-      });
+  it('renders loading state when data is loading', async () => {
+    mockUseRouter({ search: '', page: '1' });
+    (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
+      data: null,
+      error: null,
+      isLoading: true,
     });
+
+    renderWithProviders(<MainPage />);
+    expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
   });
 
-  it('updates search term when Search input changes', async () => {
-    const fakeSuccessResponse = {
-      results: [
-        { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' },
-      ],
-      count: 1,
-      next: null,
-      previous: null,
-    };
+  it('renders error message when data fetch fails', async () => {
+    mockUseRouter({ search: '', page: '1' });
+    // Simulate error state
+    (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
+      data: null,
+      error: { message: 'Network Error' },
+      isLoading: false,
+    });
 
-    (global.fetch as jest.Mock) = jest.fn(() =>
-      Promise.resolve(
-        new Response(JSON.stringify(fakeSuccessResponse), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
-    ) as jest.Mock;
-
-    const store = createTestStore();
-    render(
-      <Provider store={store}>
-        <MemoryRouter>
-          <MainPage />
-        </MemoryRouter>
-      </Provider>
-    );
-
-    const searchInput = screen.getByTestId('search-input') as HTMLInputElement;
-    expect(searchInput.value).toBe('');
-
-    fireEvent.change(searchInput, { target: { value: 'Yoda' } });
-    expect(searchInput.value).toBe('Yoda');
+    renderWithProviders(<MainPage />);
+    expect(screen.getByText(/Error fetching data/i)).toBeInTheDocument();
   });
 
-  it('updates page search param when Pagination button is clicked', async () => {
-    const fakeSuccessResponse = {
-      results: [
-        { name: 'Luke Skywalker', url: 'https://swapi.dev/api/people/1/' },
-      ],
+  it('renders items list when data is successfully fetched', async () => {
+    const mockData = {
       count: 20,
-      next: null,
-      previous: null,
+      results: [
+        {
+          name: 'Luke Skywalker',
+          model: 'T-65 X-wing',
+          url: 'https://swapi.dev/api/people/1/',
+        },
+        {
+          name: 'Leia Organa',
+          model: 'CR90 corvette',
+          url: 'https://swapi.dev/api/people/2/',
+        },
+      ],
     };
 
-    (global.fetch as jest.Mock) = jest.fn(() =>
-      Promise.resolve(
-        new Response(JSON.stringify(fakeSuccessResponse), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
-      )
-    ) as jest.Mock;
+    mockUseRouter({ search: '', page: '1' });
+    (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
+      data: mockData,
+      error: null,
+      isLoading: false,
+    });
 
-    const setSearchParamsMock = jest.fn();
-    jest
-      .spyOn(reactRouterDom, 'useSearchParams')
-      .mockReturnValue([new URLSearchParams('?page=1'), setSearchParamsMock]);
+    renderWithProviders(<MainPage />);
+    expect(screen.getByText(/Luke Skywalker/i)).toBeInTheDocument();
+    expect(screen.getByText(/Leia Organa/i)).toBeInTheDocument();
+  });
 
-    const store = createTestStore();
+  it('renders pagination when there are multiple pages', async () => {
+    const mockData = {
+      count: 20,
+      results: [
+        {
+          name: 'Luke Skywalker',
+          model: 'T-65 X-wing',
+          url: 'https://swapi.dev/api/people/1/',
+        },
+      ],
+    };
+
+    mockUseRouter({ search: '', page: '1' });
+    (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
+      data: mockData,
+      error: null,
+      isLoading: false,
+    });
+
+    renderWithProviders(<MainPage />);
+    expect(screen.getByText(/Page 1/i)).toBeInTheDocument();
+  });
+
+  it('calls router.push with updated search term and page when a new search is made', async () => {
+    mockUseRouter({ search: '', page: '1' });
+    (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
+      data: { count: 0, results: [] },
+      error: null,
+      isLoading: false,
+    });
+
     render(
       <Provider store={store}>
-        <MemoryRouter>
-          <Routes>
-            <Route path="*" element={<MainPage />} />
-          </Routes>
-        </MemoryRouter>
+        <MainPage />
       </Provider>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('Luke Skywalker')).toBeInTheDocument();
+    const searchInput = screen.getByRole('textbox');
+    fireEvent.change(searchInput, { target: { value: 'Skywalker' } });
+
+    const searchButton = screen.getByRole('button', { name: /Search/i });
+    fireEvent.click(searchButton);
+
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/',
+        query: { search: 'Skywalker', page: '1' },
+      })
+    );
+  });
+
+  it('renders detail item page when details are in the query', async () => {
+    const mockItem = { name: 'Luke Skywalker', model: 'T-65 X-wing' };
+    mockUseRouter({ search: '', page: '1', details: '1' });
+    // Simulate fetching detail item data
+    (apiSlice.useFetchSinglePersonQuery as jest.Mock).mockReturnValue({
+      data: mockItem,
+      error: null,
+      isLoading: false,
     });
 
-    const paginationButton = screen.getByTestId('pagination-button');
-    fireEvent.click(paginationButton);
+    renderWithProviders(<MainPage />);
+    expect(screen.getByText(/Luke Skywalker/i)).toBeInTheDocument();
+    expect(screen.getByText(/T-65 X-wing/i)).toBeInTheDocument();
+  });
 
-    expect(setSearchParamsMock).toHaveBeenCalled();
-    const newParams = setSearchParamsMock.mock.calls[0][0] as URLSearchParams;
-    expect(newParams.get('page')).toBe('2');
+  it('calls handleCloseDetails when close button is clicked', async () => {
+    mockUseRouter({ search: '', page: '1', details: '1' });
+    (apiSlice.useFetchSinglePersonQuery as jest.Mock).mockReturnValue({
+      data: { name: 'Luke Skywalker', model: 'T-65 X-wing' },
+      error: null,
+      isLoading: false,
+    });
+
+    renderWithProviders(<MainPage />);
+    const closeButton = screen.getByRole('button', { name: /Close/i });
+    fireEvent.click(closeButton);
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/',
+        query: { search: '', page: '1' },
+      })
+    );
   });
 });

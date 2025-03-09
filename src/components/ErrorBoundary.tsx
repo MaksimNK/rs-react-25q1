@@ -1,4 +1,4 @@
-import { ReactNode, Component, ErrorInfo } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface IPropsErrorBoundary {
   children?: ReactNode;
@@ -27,7 +27,7 @@ class ErrorBoundary extends Component<
     return { hasError: true, error: error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error: error, errorInfo: errorInfo });
   }
 
@@ -35,7 +35,7 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div>
-          <h1>Somthing Wrong</h1>
+          <h1>Something Went Wrong</h1>
           <details>
             <summary>Error Details</summary>
             <pre>{this.state.error?.toString()}</pre>

@@ -17,6 +17,5 @@ export default {
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.ts"],
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
-    "!src/App.tsx"
   ],
 };

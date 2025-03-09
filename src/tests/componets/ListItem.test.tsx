@@ -4,11 +4,13 @@ import configureMockStore from 'redux-mock-store';
 import ListItem from '../../components/ListItem';
 import { IItem } from '../../types/item';
 
-// Mock react-router-dom's useSearchParams
-const mockSetSearchParams = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useSearchParams: () => [new URLSearchParams(), mockSetSearchParams],
+const mockRouterPush = jest.fn();
+const mockRouterQuery = {};
+jest.mock('next/router', () => ({
+  useRouter: () => ({
+    push: mockRouterPush,
+    query: mockRouterQuery,
+  }),
 }));
 
 const mockStore = configureMockStore();
@@ -17,6 +19,10 @@ describe('ListItem component', () => {
   const items: IItem[] = [
     { name: 'Test Person', url: 'https://swapi.dev/api/people/1/' },
   ];
+
+  beforeEach(() => {
+    mockRouterPush.mockClear();
+  });
 
   it('renders list items and handles click', () => {
     const store = mockStore({
@@ -36,8 +42,11 @@ describe('ListItem component', () => {
 
     fireEvent.click(listItem);
 
-    expect(mockSetSearchParams).toHaveBeenCalled();
-    const paramsArg = mockSetSearchParams.mock.calls[0][0] as URLSearchParams;
-    expect(paramsArg.get('details')).toBe('1');
+    expect(mockRouterPush).toHaveBeenCalled();
+    const routerPushArg = mockRouterPush.mock.calls[0][0];
+    expect(routerPushArg).toEqual({
+      pathname: '/',
+      query: { details: '1' },
+    });
   });
 });
