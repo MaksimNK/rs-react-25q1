@@ -1,3 +1,4 @@
+'use client';
 import { useFetchSinglePersonQuery } from '../redux/apiSlice';
 
 interface DetailItemProps {

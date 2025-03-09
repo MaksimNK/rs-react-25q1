@@ -1,5 +1,7 @@
+'use client';
+
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Search from '../components/Search';
 import ListItem from '../components/ListItem';
 import Pagination from '../components/Pagination';
@@ -7,40 +9,33 @@ import Flyout from '../components/Flyout';
 import { useFetchDataQuery } from '../redux/apiSlice';
 import DetailItemPage from '../components/DetailItemPage';
 
-const MainPage = () => {
+export default function HomePage() {
   const router = useRouter();
-  const { query } = router;
+  const searchParams = useSearchParams();
 
-  const [searchTerm, setSearchTerm] = useState<string>(
-    (query.search as string) || ''
-  );
-  const currentPage = Number(query.page) || 1;
+  const initialSearch = searchParams.get('search') || '';
+  const initialPage = Number(searchParams.get('page')) || 1;
+  const [searchTerm, setSearchTerm] = useState<string>(initialSearch);
 
   const { data, error, isLoading } = useFetchDataQuery({
     category: 'people',
     searchTerm,
-    page: currentPage,
+    page: initialPage,
   });
 
   const handlePageChange = (newPage: number) => {
-    router.push({
-      pathname: '/',
-      query: { ...query, page: newPage.toString() },
-    });
+    router.push(`/?search=${searchTerm}&page=${newPage}`);
   };
 
-  const handleSearch = (newSearchTerm: string): void => {
+  const handleSearch = (newSearchTerm: string) => {
     setSearchTerm(newSearchTerm);
-    router.push({
-      pathname: '/',
-      query: { search: newSearchTerm, page: '1' },
-    });
+    router.push(`/?search=${newSearchTerm}&page=1`);
   };
 
   const handleCloseDetails = () => {
-    const { details, ...restQuery } = query;
-    void details;
-    router.push({ pathname: '/', query: restQuery });
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('details');
+    router.push(`/?${params.toString()}`);
   };
 
   const totalPages = data ? Math.ceil(data.count / 10) : 0;
@@ -56,16 +51,16 @@ const MainPage = () => {
         {data && data.results && <ListItem items={data.results} />}
         {totalPages > 1 && (
           <Pagination
-            currentPage={currentPage}
+            currentPage={initialPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
           />
         )}
       </div>
       <div className="right-section">
-        {query.details && (
+        {searchParams.get('details') && (
           <DetailItemPage
-            id={query.details as string}
+            id={searchParams.get('details') as string}
             onClose={handleCloseDetails}
           />
         )}
@@ -73,6 +68,4 @@ const MainPage = () => {
       <Flyout />
     </div>
   );
-};
-
-export default MainPage;
+}
