@@ -1,18 +1,17 @@
-import { FC } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+'use client';
 import { useFetchSinglePersonQuery } from '../redux/apiSlice';
-export const DetailItemPage: FC = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
 
+interface DetailItemProps {
+  id: string;
+  onClose: () => void;
+}
+
+const DetailItemPage: React.FC<DetailItemProps> = ({ id, onClose }) => {
   const {
     data: item,
     error,
     isLoading,
-  } = useFetchSinglePersonQuery(
-    { id: id as string, category: 'people' },
-    { skip: !id }
-  );
+  } = useFetchSinglePersonQuery({ id, category: 'people' }, { skip: !id });
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div className="error">Error fetching data.</div>;
@@ -20,7 +19,7 @@ export const DetailItemPage: FC = () => {
 
   return (
     <div className="details-panel">
-      <button className="close-button" onClick={() => navigate('/')}>
+      <button className="close-button" onClick={onClose}>
         Close
       </button>
       <h2>{item.name}</h2>

@@ -1,4 +1,3 @@
-// store.test.ts
 import store from '../../redux/store';
 import {
   selectItem,

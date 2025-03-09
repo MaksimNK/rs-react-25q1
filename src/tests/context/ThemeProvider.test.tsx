@@ -2,7 +2,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider } from '../../context/ThemeProvider';
 import { useTheme } from '../../context/theme-context';
 
-// A dummy component that uses the useTheme hook.
 const DummyComponent = () => {
   const { theme, setTheme } = useTheme();
   return (
@@ -15,7 +14,6 @@ const DummyComponent = () => {
 
 describe('ThemeProvider and useTheme', () => {
   it('throws error when useTheme is used outside of ThemeProvider', () => {
-    // Rendering DummyComponent without ThemeProvider should throw.
     expect(() => render(<DummyComponent />)).toThrow(
       'useTheme must be used within a ThemeProvider'
     );
@@ -47,11 +45,9 @@ describe('ThemeProvider and useTheme', () => {
         <DummyComponent />
       </ThemeProvider>
     );
-    // The provider wraps children in a div with class "theme-light" by default.
     expect(container.firstChild).toHaveClass('theme-light');
     const button = screen.getByRole('button', { name: /Set Dark/i });
     fireEvent.click(button);
-    // After updating, the class should change to "theme-dark".
     expect(container.firstChild).toHaveClass('theme-dark');
   });
 });

@@ -9,6 +9,7 @@ import reactCompiler from 'eslint-plugin-react-compiler';
 
 export default tseslint.config(
   { ignores: ['dist'] },
+  { ignores: ['.next'] },
   {
     extends: [
       js.configs.recommended,
@@ -35,6 +36,7 @@ export default tseslint.config(
       'react-compiler/react-compiler': 'error',
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
+      'react/prop-types': 'off'
     },
     settings: {
       react: {

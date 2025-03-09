@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 const ProblemChild = () => {
@@ -6,7 +6,7 @@ const ProblemChild = () => {
 };
 
 describe('ErrorBoundary component', () => {
-  it('displays fallback UI when a child component throws an error', () => {
+  it('displays fallback UI when a child component throws an error', async () => {
     const consoleError = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -17,8 +17,10 @@ describe('ErrorBoundary component', () => {
       </ErrorBoundary>
     );
 
-    expect(screen.getByText(/Somthing Wrong/i)).toBeInTheDocument();
-    expect(screen.getByText(/Error Details/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Something Went Wrong/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error Details/i)).toBeInTheDocument();
+    });
 
     consoleError.mockRestore();
   });

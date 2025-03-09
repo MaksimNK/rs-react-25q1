@@ -1,21 +1,13 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import DetailItemPage from '../../pages/DetailItemPage';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import DetailItemPage from '../../components/DetailItemPage';
+import { useRouter } from 'next/router';
 import * as apiSlice from '../../redux/apiSlice';
 import { IItem } from '../../types/item';
 import { QueryStatus } from '@reduxjs/toolkit/query';
 
-const mockNavigate = jest.fn();
-
-jest.mock('react-router-dom', () => {
-  const originalModule = jest.requireActual('react-router-dom');
-  return {
-    __esModule: true,
-    ...originalModule,
-    useParams: () => ({ id: '1' }),
-    useNavigate: () => mockNavigate,
-  };
-});
+jest.mock('next/router', () => ({
+  useRouter: jest.fn(),
+}));
 
 interface FakeQueryResult<T> {
   data?: T;
@@ -32,6 +24,13 @@ interface FakeQueryResult<T> {
 }
 
 describe('DetailItemPage', () => {
+  let mockRouter: { push: jest.Mock; query: { id: string } };
+
+  beforeEach(() => {
+    mockRouter = { push: jest.fn(), query: { id: '1' } };
+    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -68,15 +67,15 @@ describe('DetailItemPage', () => {
       >
     );
 
-    render(
-      <MemoryRouter>
-        <DetailItemPage />
-      </MemoryRouter>
-    );
+    // Добавляем пропс id при рендеринге
+    render(<DetailItemPage onClose={() => {}} id={mockRouter.query.id} />);
 
-    const heading = await screen.findByRole('heading', { level: 2 });
-    expect(heading).toHaveTextContent('Luke Skywalker');
-    expect(screen.getByText('T-65 X-wing')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+        'Luke Skywalker'
+      );
+      expect(screen.getByText('T-65 X-wing')).toBeInTheDocument();
+    });
   });
 
   it('renders error message when fetch fails', async () => {
@@ -105,17 +104,15 @@ describe('DetailItemPage', () => {
       >
     );
 
-    render(
-      <MemoryRouter>
-        <DetailItemPage />
-      </MemoryRouter>
-    );
+    // Добавляем пропс id при рендеринге
+    render(<DetailItemPage onClose={() => {}} id={mockRouter.query.id} />);
 
-    const errorEl = await screen.findByText(/Error fetching data/i);
-    expect(errorEl).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/Error fetching data/i)).toBeInTheDocument();
+    });
   });
 
-  it('calls navigate("/") when the close button is clicked', async () => {
+  it('calls router.push("/") when the close button is clicked', async () => {
     const itemData: IItem = {
       name: 'Luke Skywalker',
       model: 'T-65 X-wing',
@@ -147,18 +144,23 @@ describe('DetailItemPage', () => {
       >
     );
 
+    // Добавляем пропс id при рендеринге
     render(
-      <MemoryRouter>
-        <DetailItemPage />
-      </MemoryRouter>
+      <DetailItemPage
+        onClose={() => mockRouter.push('/')}
+        id={mockRouter.query.id}
+      />
     );
 
-    const heading = await screen.findByRole('heading', { level: 2 });
-    expect(heading).toHaveTextContent('Luke Skywalker');
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
+        'Luke Skywalker'
+      );
+    });
 
     const closeButton = screen.getByRole('button', { name: /Close/i });
     fireEvent.click(closeButton);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockRouter.push).toHaveBeenCalledWith('/');
   });
 });

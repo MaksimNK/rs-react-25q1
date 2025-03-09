@@ -1,3 +1,5 @@
+'use client';
+
 import { FC } from 'react';
 
 interface PaginationProps {
@@ -31,3 +33,5 @@ export const Pagination: FC<PaginationProps> = ({
     </div>
   );
 };
+
+export default Pagination;

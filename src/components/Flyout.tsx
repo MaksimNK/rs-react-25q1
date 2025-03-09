@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../redux/store';

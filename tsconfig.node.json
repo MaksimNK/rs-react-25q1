@@ -11,15 +11,24 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "noEmit": false,
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "composite": true
   },
   "include": [
     "src/**/*",
     "vite.config.ts",
     "eslint.d.ts"
-  ]
+  ],
+  "paths": {
+    "@components/": [
+      "components/"
+    ],
+    "@pages/": [
+      "pages/"
+    ]
+  }
 }
