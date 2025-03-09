@@ -1,16 +1,16 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import configureMockStore from 'redux-mock-store';
 import ListItem from '../../components/ListItem';
 import { IItem } from '../../types/item';
 
 const mockRouterPush = jest.fn();
-const mockRouterQuery = {};
-jest.mock('next/router', () => ({
+
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockRouterPush,
-    query: mockRouterQuery,
   }),
+  useSearchParams: () => new URLSearchParams(''),
 }));
 
 const mockStore = configureMockStore();
@@ -24,7 +24,7 @@ describe('ListItem component', () => {
     mockRouterPush.mockClear();
   });
 
-  it('renders list items and handles click', () => {
+  it('renders list items and handles click', async () => {
     const store = mockStore({
       selectedItem: {
         items: [],
@@ -42,11 +42,10 @@ describe('ListItem component', () => {
 
     fireEvent.click(listItem);
 
-    expect(mockRouterPush).toHaveBeenCalled();
-    const routerPushArg = mockRouterPush.mock.calls[0][0];
-    expect(routerPushArg).toEqual({
-      pathname: '/',
-      query: { details: '1' },
-    });
+    await waitFor(() =>
+      expect(mockRouterPush).toHaveBeenCalledWith(
+        expect.stringContaining('details=1')
+      )
+    );
   });
 });

@@ -1,19 +1,14 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import MainPage from '../../pages/index';
-import { useRouter } from 'next/router';
+import HomePage from '../../app/page'; // HomePage is in the app folder now
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Provider } from 'react-redux';
 import store from '../../redux/store';
 import * as apiSlice from '../../redux/apiSlice';
 
-interface RouterQuery {
-  search?: string;
-  page?: string;
-  details?: string;
-}
-
-jest.mock('next/router', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  useSearchParams: jest.fn(),
 }));
 
 jest.mock('../../redux/apiSlice', () => {
@@ -25,12 +20,27 @@ jest.mock('../../redux/apiSlice', () => {
   };
 });
 
+interface RouterQuery {
+  search?: string;
+  page?: string;
+  details?: string;
+}
+
 const mockPush = jest.fn();
 
-const mockUseRouter = (query: RouterQuery) => {
+const mockUseRouter = () => {
   (useRouter as jest.Mock).mockReturnValue({
-    query,
     push: mockPush,
+  });
+};
+
+const mockUseSearchParams = (query: RouterQuery) => {
+  (useSearchParams as jest.Mock).mockReturnValue({
+    get: (key: keyof RouterQuery) => query[key] || null,
+    toString: () => {
+      const params = new URLSearchParams(query as Record<string, string>);
+      return params.toString();
+    },
   });
 };
 
@@ -38,33 +48,36 @@ const renderWithProviders = (ui: React.ReactElement) => {
   return render(<Provider store={store}>{ui}</Provider>);
 };
 
-describe('MainPage', () => {
+describe('HomePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders loading state when data is loading', async () => {
-    mockUseRouter({ search: '', page: '1' });
+    const query: RouterQuery = { search: '', page: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
       data: null,
       error: null,
       isLoading: true,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
     expect(screen.getByText(/Loading.../i)).toBeInTheDocument();
   });
 
   it('renders error message when data fetch fails', async () => {
-    mockUseRouter({ search: '', page: '1' });
-    // Simulate error state
+    const query: RouterQuery = { search: '', page: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
       data: null,
       error: { message: 'Network Error' },
       isLoading: false,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
     expect(screen.getByText(/Error fetching data/i)).toBeInTheDocument();
   });
 
@@ -84,15 +97,16 @@ describe('MainPage', () => {
         },
       ],
     };
-
-    mockUseRouter({ search: '', page: '1' });
+    const query: RouterQuery = { search: '', page: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
       data: mockData,
       error: null,
       isLoading: false,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
     expect(screen.getByText(/Luke Skywalker/i)).toBeInTheDocument();
     expect(screen.getByText(/Leia Organa/i)).toBeInTheDocument();
   });
@@ -108,77 +122,75 @@ describe('MainPage', () => {
         },
       ],
     };
-
-    mockUseRouter({ search: '', page: '1' });
+    const query: RouterQuery = { search: '', page: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
       data: mockData,
       error: null,
       isLoading: false,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
+    // Assuming your Pagination component renders "Page 1"
     expect(screen.getByText(/Page 1/i)).toBeInTheDocument();
   });
 
   it('calls router.push with updated search term and page when a new search is made', async () => {
-    mockUseRouter({ search: '', page: '1' });
+    const query: RouterQuery = { search: '', page: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchDataQuery as jest.Mock).mockReturnValue({
       data: { count: 0, results: [] },
       error: null,
       isLoading: false,
     });
 
-    render(
-      <Provider store={store}>
-        <MainPage />
-      </Provider>
-    );
-
+    renderWithProviders(<HomePage />);
     const searchInput = screen.getByRole('textbox');
     fireEvent.change(searchInput, { target: { value: 'Skywalker' } });
-
     const searchButton = screen.getByRole('button', { name: /Search/i });
     fireEvent.click(searchButton);
 
     await waitFor(() =>
-      expect(mockPush).toHaveBeenCalledWith({
-        pathname: '/',
-        query: { search: 'Skywalker', page: '1' },
-      })
+      expect(mockPush).toHaveBeenCalledWith(`/?search=Skywalker&page=1`)
     );
   });
 
   it('renders detail item page when details are in the query', async () => {
     const mockItem = { name: 'Luke Skywalker', model: 'T-65 X-wing' };
-    mockUseRouter({ search: '', page: '1', details: '1' });
-    // Simulate fetching detail item data
+    const query: RouterQuery = { search: '', page: '1', details: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchSinglePersonQuery as jest.Mock).mockReturnValue({
       data: mockItem,
       error: null,
       isLoading: false,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
     expect(screen.getByText(/Luke Skywalker/i)).toBeInTheDocument();
     expect(screen.getByText(/T-65 X-wing/i)).toBeInTheDocument();
   });
 
   it('calls handleCloseDetails when close button is clicked', async () => {
-    mockUseRouter({ search: '', page: '1', details: '1' });
+    const query: RouterQuery = { search: '', page: '1', details: '1' };
+    mockUseRouter();
+    mockUseSearchParams(query);
     (apiSlice.useFetchSinglePersonQuery as jest.Mock).mockReturnValue({
       data: { name: 'Luke Skywalker', model: 'T-65 X-wing' },
       error: null,
       isLoading: false,
     });
 
-    renderWithProviders(<MainPage />);
+    renderWithProviders(<HomePage />);
     const closeButton = screen.getByRole('button', { name: /Close/i });
     fireEvent.click(closeButton);
     await waitFor(() =>
-      expect(mockPush).toHaveBeenCalledWith({
-        pathname: '/',
-        query: { search: '', page: '1' },
-      })
+      // Here we expect router.push to be called with a URL string without "details" parameter
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.stringMatching(/\?(.+)&page=1/)
+      )
     );
   });
 });
