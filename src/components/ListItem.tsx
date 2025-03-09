@@ -1,5 +1,7 @@
+'use client';
+
 import { FC } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Item from './Item';
 import { IItem } from '../types/item';
 
@@ -9,13 +11,13 @@ interface IListItemProps {
 
 export const ListItem: FC<IListItemProps> = ({ items }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleItemClick = (event: React.MouseEvent, id: string) => {
     event.stopPropagation();
-    router.push({
-      pathname: '/',
-      query: { ...router.query, details: id },
-    });
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('details', id);
+    router.push(`/?${params.toString()}`);
   };
 
   return (

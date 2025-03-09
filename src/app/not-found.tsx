@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const NotFoundPage = () => {
+export default function NotFoundPage() {
   return (
     <div className="not-found">
       <h1>404 - Page Not Found</h1>
@@ -8,6 +8,4 @@ const NotFoundPage = () => {
       <Link href="/">Go back to Home</Link>
     </div>
   );
-};
-
-export default NotFoundPage;
+}
